@@ -14,12 +14,16 @@
 
 float x_mod = 0;
 float y_mod = 0;
+float z_mod = -1;
 
 float scale_x = 1;
 float scale_y = 1;
 
 float x, y, z;
 float theta;
+
+float width = 600.0f;
+float height = 600.0f;
 
 void Key_Callback(
     GLFWwindow* window,
@@ -41,6 +45,12 @@ void Key_Callback(
     }
     if (key == GLFW_KEY_S && action == GLFW_PRESS) {
         y_mod -= 0.1f;
+    }
+    if (key == GLFW_KEY_F && action == GLFW_PRESS) {
+        z_mod += 0.1f;
+    }
+    if (key == GLFW_KEY_G && action == GLFW_PRESS) {
+        z_mod -= 0.1f;
     }
     //scale
     if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
@@ -73,7 +83,7 @@ int main(void)
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Francis Apolinar", NULL, NULL);
+    window = glfwCreateWindow(width, height, "Francis Apolinar", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -83,6 +93,13 @@ int main(void)
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
     gladLoadGL();
+
+    //for splitscreen view - Oooo
+    /*glViewport(0, //min x
+        0, //min y
+        width, //width
+        height //height
+    );*/
 
     glfwSetKeyCallback(window, Key_Callback);
 
@@ -147,6 +164,23 @@ int main(void)
     GLuint indices[]{
         0, 1, 2
     };
+
+    //changes the size of screen from 1 to x, x being any number
+    /*glm::mat4 projection = glm::ortho(
+        -2.0f, //left moost point
+        2.0f, //right most point
+        -2.0f, //bottom most point
+        2.0f, //top most point
+        -1.0f, //z near
+        1.0f); //z far
+    */
+
+    glm::mat4 projection = glm::perspective(
+        glm::radians(60.0f), //fov
+        height / width, //aspect ratio / window height and width
+        0.1f, //near
+        100.f //far
+    );
 
     //creates a 3x3 identity matrix
     glm::mat3 identity_matrix3 = glm::mat3(1.0f);
@@ -235,7 +269,7 @@ int main(void)
 
         glm::mat4 transformation_matrix = glm::translate(
             identity_matrix4,
-            glm::vec3(x_mod, y_mod, 0));
+            glm::vec3(x_mod, y_mod, z_mod)); //-1 to see the bunny in the projection matrix since 0 is on the camera itself
         
         transformation_matrix = glm::scale(
             transformation_matrix,
@@ -256,6 +290,12 @@ int main(void)
             1,
             GL_FALSE,
             glm::value_ptr(transformation_matrix));
+
+        unsigned int projLoc = glGetUniformLocation(shaderProgram, "projection");
+        glUniformMatrix4fv(projLoc,
+            1,
+            GL_FALSE,
+            glm::value_ptr(projection));
 
         glUseProgram(shaderProgram);
 
