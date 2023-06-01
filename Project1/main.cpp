@@ -21,6 +21,8 @@ float scale_y = 1;
 
 float x, y, z;
 float theta;
+float theta_x;
+float theta_y;
 
 float width = 600.0f;
 float height = 600.0f;
@@ -34,25 +36,82 @@ void Key_Callback(
 )
 {
     //transform
-    if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-        x_mod += 0.1f;
+    if (key == GLFW_KEY_D) {
+        //x_mod += 0.1f;
+        switch (action) {
+            case GLFW_PRESS:
+                x_mod += 0.01f;
+                break;
+
+            case GLFW_REPEAT:
+                x_mod += 0.01f;
+                break;
+            
+        }
     }
-    if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-        x_mod -= 0.1f;
+    if (key == GLFW_KEY_A) {
+        switch (action) {
+            case GLFW_PRESS:
+                x_mod -= 0.01f;
+                break;
+
+            case GLFW_REPEAT:
+                x_mod -= 0.01f;
+                break;
+
+        }
     }
-    if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-        y_mod += 0.1f;
+    if (key == GLFW_KEY_W) {
+        switch (action) {
+            case GLFW_PRESS:
+                y_mod += 0.01f;
+                break;
+
+            case GLFW_REPEAT:
+                y_mod += 0.01f;
+                break;
+
+        }
     }
-    if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-        y_mod -= 0.1f;
+    if (key == GLFW_KEY_S) {
+        switch (action) {
+            case GLFW_PRESS:
+                y_mod -= 0.01f;
+                break;
+
+            case GLFW_REPEAT:
+                y_mod -= 0.01f;
+                break;
+
+        }
     }
-    if (key == GLFW_KEY_F && action == GLFW_PRESS) {
-        z_mod += 0.1f;
+    //zoom in/out
+    if (key == GLFW_KEY_X) {
+        switch (action) {
+            case GLFW_PRESS:
+                z_mod += 0.01f;
+                break;
+
+            case GLFW_REPEAT:
+                z_mod += 0.01f;
+                break;
+
+        }
     }
-    if (key == GLFW_KEY_G && action == GLFW_PRESS) {
-        z_mod -= 0.1f;
+    if (key == GLFW_KEY_Z) {
+        switch (action) {
+            case GLFW_PRESS:
+                z_mod -= 0.01f;
+                break;
+
+            case GLFW_REPEAT:
+                z_mod -= 0.01f;
+                break;
+
+        }
     }
     //scale
+    /*
     if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
         scale_x += 0.1f;
     }
@@ -65,12 +124,87 @@ void Key_Callback(
     if (key == GLFW_KEY_V && action == GLFW_PRESS) {
         scale_y -= 0.1f;
     }
-    //rotation
-    if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
-        theta += 10.0f;
+    */
+    if (key == GLFW_KEY_Q) {
+        
+        switch (action) {
+            case GLFW_PRESS:
+                scale_x -= 0.1f;
+                scale_y -= 0.1f;
+                break;
+
+            case GLFW_REPEAT:
+                scale_x -= 0.1f;
+                scale_y -= 0.1f;
+                break;
+
+        }
     }
-    if (key == GLFW_KEY_E && action == GLFW_PRESS) {
-        theta -= 10.0f;
+    if (key == GLFW_KEY_E) {
+        switch (action) {
+            case GLFW_PRESS:
+                scale_x += 0.1f;
+                scale_y += 0.1f;
+                break;
+
+            case GLFW_REPEAT:
+                scale_x += 0.1f;
+                scale_y += 0.1f;
+                break;
+
+        }
+    }
+    //rotation
+    if (key == GLFW_KEY_DOWN) {
+        
+        switch (action) {
+            case GLFW_PRESS:
+                theta_x += 10.0f;
+                break;
+
+            case GLFW_REPEAT:
+                theta_x += 10.0f;
+                break;
+
+        }
+    }
+    if (key == GLFW_KEY_UP) {
+        
+        switch (action) {
+            case GLFW_PRESS:
+                theta_x -= 10.0f;
+                break;
+
+            case GLFW_REPEAT:
+                theta_x -= 10.0f;
+                break;
+
+        }
+    }
+    if (key == GLFW_KEY_LEFT) {
+        
+        switch (action) {
+            case GLFW_PRESS:
+                theta_y -= 10.0f;
+                break;
+
+            case GLFW_REPEAT:
+                theta_y -= 10.0f;
+                break;
+
+        }
+    }
+    if (key == GLFW_KEY_RIGHT) {
+        switch (action) {
+            case GLFW_PRESS:
+                theta_y += 10.0f;
+                break;
+
+            case GLFW_REPEAT:
+                theta_y += 10.0f;
+                break;
+
+        }
     }
 }
 
@@ -259,6 +393,50 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
+        glm::vec3 cameraPos = glm::vec3(0, 0, 10.f);
+        glm::mat4 cameraPosMatrix = glm::translate(
+            glm::mat4(1.0f),
+            cameraPos * -1.0f
+        );
+
+        //up direction of the wrld
+        glm::vec3 worldUp = glm::normalize(glm::vec3(0, 1.0f, 0));
+
+        //camera's center tilted up by 3
+        glm::vec3 cameraCenter = glm::vec3(0, 3.0f, 0);
+
+        //get the forward
+        glm::vec3 F = (cameraCenter - cameraPos);
+        F = glm::normalize(F);
+
+        //get the right - F x world up
+        glm::vec3 R = glm::cross(F, worldUp);
+        //get the up - R x F
+        glm::vec3 U = glm::cross(R, F);
+
+        glm::mat4 cameraOrientation = glm::mat4(1.0f);
+
+        //matrix[C][R]
+        //right
+        cameraOrientation[0][0] = R.x;
+        cameraOrientation[1][0] = R.y;
+        cameraOrientation[2][0] = R.z;
+
+        //up
+        cameraOrientation[0][1] = U.x;
+        cameraOrientation[1][1] = U.y;
+        cameraOrientation[2][1] = U.z;
+
+        //-forward
+        cameraOrientation[0][2] = -F.x;
+        cameraOrientation[1][2] = -F.y;
+        cameraOrientation[2][2] = -F.z;
+
+        //glm::mat4 viewMatrix = cameraOrientation * cameraPosMatrix;
+        //easier versin of ^^^^^
+        glm::mat4 viewMatrix =
+            glm::lookAt(cameraPos, cameraCenter, worldUp);
+
         //x_mod += 0.001f;
 
         /*unsigned int xLoc = glGetUniformLocation(shaderProgram, "x");
@@ -278,11 +456,23 @@ int main(void)
 
         transformation_matrix = glm::rotate(
             transformation_matrix,
-            glm::radians(theta),
+            glm::radians(theta_x),
             glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f))
         );
 
+        transformation_matrix = glm::rotate(
+            transformation_matrix,
+            glm::radians(theta_y),
+            glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f))
+        );
+
         //std::cout << theta << std::endl;
+
+        unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
+        glUniformMatrix4fv(viewLoc,
+            1,
+            GL_FALSE,
+            glm::value_ptr(viewMatrix));
 
         unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
 
