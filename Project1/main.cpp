@@ -9,6 +9,10 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
+//stb_image
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include <string>
 #include <iostream>
 
@@ -228,6 +232,12 @@ int main(void)
     glfwMakeContextCurrent(window);
     gladLoadGL();
 
+    int img_width, //width of the texture
+        img_height, //height of the texture
+        colorChannels; // number of color channels
+
+
+
     //for splitscreen view - Oooo
     /*glViewport(0, //min x
         0, //min y
@@ -265,7 +275,7 @@ int main(void)
     glLinkProgram(shaderProgram);
     //shader ends here
 
-    std::string path = "3D/bunny.obj";
+    std::string path = "3D/myCube.obj";
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> material;
     std::string warning, error;
@@ -293,6 +303,17 @@ int main(void)
         0.f, 0.5f, 0.f, //point 1
         -0.5f, -0.5f, 0.f, //point 2
         0.5f, -0.5f, 0.f
+    };
+
+    GLfloat UV[]{
+        0.f, 1.f,
+        0.f, 0.f,
+        1.f, 1.f,
+        1.f, 0.f,
+        1.f, 1.f,
+        1.f, 0.f,
+        0.f, 1.f,
+        0.f, 0.f
     };
 
     GLuint indices[]{
