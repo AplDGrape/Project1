@@ -232,12 +232,6 @@ int main(void)
     glfwMakeContextCurrent(window);
     gladLoadGL();
 
-    int img_width, //width of the texture
-        img_height, //height of the texture
-        colorChannels; // number of color channels
-
-
-
     //for splitscreen view - Oooo
     /*glViewport(0, //min x
         0, //min y
