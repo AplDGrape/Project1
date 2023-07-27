@@ -11,6 +11,11 @@ layout(location = 1) in vec3 vertexNormal;
 //accessess the uv and assignes it the aTex
 layout(location = 2) in vec2 aTex;
 
+layout(location = 3) in vec3 m_tan;
+layout(location = 4) in vec3 m_btan;
+
+out mat3 TBN;
+
 //pass the tex coord to the fragment shader
 out vec2 texCoord;
 
@@ -39,8 +44,17 @@ void main(){
 	texCoord = aTex;
 
 	//get the normal matrix and convert it to a 3x3 matrix
-	normCoord = mat3(transpose(inverse(transform))) * vertexNormal; 
+	//normCoord = mat3(transpose(inverse(transform))) * vertexNormal; 
 	// apply the normal matrix to the normal data
+
+	mat3 modelMat = mat3(transpose(inverse(transform))); 
+	normCoord = modelMat * vertexNormal;
+
+	vec3 T = normalize(modelMat * m_tan);
+	vec3 B = normalize(modelMat * m_btan);
+	vec3 N = normalize(normCoord);
+
+	TBN = mat3(T, B, N);
 
 	//the position is just your transform matrix applied to the vertex as a vector 3
 	fragPos = vec3(transform * vec4(aPos, 1.0)); // vertex position in world space

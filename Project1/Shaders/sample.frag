@@ -3,6 +3,9 @@
 //texture to be passed
 uniform sampler2D tex0;
 
+//texture of the normal
+uniform sampler2D norm_tex;
+
 //should recieve the texcoord from the vertex shader
 in vec2 texCoord;
 
@@ -10,6 +13,8 @@ in vec2 texCoord;
 in vec3 normCoord;
 //vertex position in world space
 in vec3 fragPos;
+
+in mat3 TBN;
 
 //position of the light source
 uniform vec3 lightPos;
@@ -35,8 +40,24 @@ void main(){
 	//                 r     g     b     a
 	//FragColor = vec4(0.0f, 0.3f, 0.4f, 1.0f);
 
+	//get the color of the pixel
+	vec4 pixelColor = texture(tex0, texCoord);
+
+	//alpha cut off
+	//if the alpha is low enough | 0.5 fr higher cut, 0.01 lwer cut
+	if(pixelColor.a < 0.1){
+		//discard the pixel
+		discard;
+	}
+
+	vec3 normal = texture(norm_tex, texCoord).rgb;
+
+	normal = normalize(normal * 2.0 - 1.0);
+
+	normal = normalize(TBN * normal);
+
 	//normalize the recieved normals
-	vec3 normal = normalize(normCoord);
+	//vec3 normal = normalize(normCoord);
 	//get the direction of the light to the fragment
 	vec3 lightDir = normalize(lightPos - fragPos);
 

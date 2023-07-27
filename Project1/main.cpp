@@ -40,15 +40,15 @@ void Key_Callback(
 )
 {
     //transform
-    /*if (key == GLFW_KEY_D) {
+    if (key == GLFW_KEY_D) {
         //x_mod += 0.1f;
         switch (action) {
             case GLFW_PRESS:
-                x_mod += 0.01f;
+                x_mod += 0.1f;
                 break;
 
             case GLFW_REPEAT:
-                x_mod += 0.01f;
+                x_mod += 0.1f;
                 break;
             
         }
@@ -56,23 +56,23 @@ void Key_Callback(
     if (key == GLFW_KEY_A) {
         switch (action) {
             case GLFW_PRESS:
-                x_mod -= 0.01f;
+                x_mod -= 0.1f;
                 break;
 
             case GLFW_REPEAT:
-                x_mod -= 0.01f;
+                x_mod -= 0.1f;
                 break;
 
         }
-    }*/
+    }
     if (key == GLFW_KEY_W) {
         switch (action) {
             case GLFW_PRESS:
-                y_mod += 0.01f;
+                y_mod += 0.1f;
                 break;
 
             case GLFW_REPEAT:
-                y_mod += 0.01f;
+                y_mod += 0.1f;
                 break;
 
         }
@@ -80,11 +80,11 @@ void Key_Callback(
     if (key == GLFW_KEY_S) {
         switch (action) {
             case GLFW_PRESS:
-                y_mod -= 0.01f;
+                y_mod -= 0.1f;
                 break;
 
             case GLFW_REPEAT:
-                y_mod -= 0.01f;
+                y_mod -= 0.1f;
                 break;
 
         }
@@ -185,7 +185,7 @@ void Key_Callback(
 
         }
     }
-    /*if (key == GLFW_KEY_LEFT) {
+    if (key == GLFW_KEY_LEFT) {
         
         switch (action) {
             case GLFW_PRESS:
@@ -209,7 +209,7 @@ void Key_Callback(
                 break;
 
         }
-    }*/
+    }
 }
 
 int main(void)
@@ -228,7 +228,7 @@ int main(void)
         return -1;
     }
 
-    std::string path = "3D/djSword.obj";
+    std::string path = "3D/teamugobj.obj";
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> material;
     std::string warning, error;
@@ -275,12 +275,28 @@ int main(void)
 
     //load the texture and fill out the variables
     unsigned char* tex_bytes =
-        stbi_load("3D/ayaya.png", //texture path
+        stbi_load("3D/brickwall.jpg", //texture path
             &img_width, //fills out the width
             &img_height, //fills out the height
             &colorChannels, //fills out the color channel
             0);
 
+    int img_widthz, img_heightz, colorChannel2;
+
+    unsigned char* normal_bytes =
+        stbi_load("3D/brickwall_normal.jpg", //texture path
+            &img_widthz, //fills out the width
+            &img_heightz, //fills out the height
+            &colorChannel2, //fills out the color channel
+            0);
+
+    //Enable Blending | placed a top most for all layers
+    glEnable(GL_BLEND);
+    //Choose a blending function | source factor, destination factor | foreground, background layer
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA/*GL_SRC_COLOR*/);
+    //Changes function to subtraction or inverses the alpha
+    //glBlendEquation(GL_FUNC_SUBTRACT);
+    
     //OpenGL reference to the texture
     GLuint texture;
     //Generate a reference
@@ -293,11 +309,11 @@ int main(void)
     //Assign the loaded texture to the Opengl reference
     glTexImage2D(GL_TEXTURE_2D,
         0, //texture 0
-        GL_RGBA, //target color format of the texture
+        GL_RGB, //target color format of the texture
         img_width, //texture width
         img_height, //texture height
         0,
-        GL_RGBA, //Color format of the texture
+        GL_RGB, //Color format of the texture
         GL_UNSIGNED_BYTE,
         tex_bytes); //loaded texture in bytes
 
@@ -305,6 +321,29 @@ int main(void)
     glGenerateMipmap(GL_TEXTURE_2D);
     //free up the loaded bytes
     stbi_image_free(tex_bytes);
+
+    GLuint norm_tex;
+    glGenTextures(1, &norm_tex);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, norm_tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGB,
+        img_widthz,
+        img_heightz,
+        0,
+        GL_RGB,
+        GL_UNSIGNED_BYTE,
+        normal_bytes
+        );
+
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(normal_bytes);
+
 
     //Enable depth testing
     glEnable(GL_DEPTH_TEST);
@@ -374,6 +413,63 @@ int main(void)
         );
     }
 
+    std::vector<glm::vec3> tangents;
+    std::vector<glm::vec3> bitangents;
+
+    for (int i = 0; i < shapes[0].mesh.indices.size(); i += 3) {
+        tinyobj::index_t vData1 = shapes[0].mesh.indices[i];
+        tinyobj::index_t vData2 = shapes[0].mesh.indices[i + 1];
+        tinyobj::index_t vData3 = shapes[0].mesh.indices[i + 2];
+
+        glm::vec3 v1 = glm::vec3(
+            attributes.vertices[vData1.vertex_index * 3],
+            attributes.vertices[vData1.vertex_index * 3 + 1],
+            attributes.vertices[vData1.vertex_index * 3 + 2]
+            );
+        glm::vec3 v2 = glm::vec3(
+            attributes.vertices[vData2.vertex_index * 3],
+            attributes.vertices[vData2.vertex_index * 3 + 1],
+            attributes.vertices[vData2.vertex_index * 3 + 2]
+        );
+        glm::vec3 v3 = glm::vec3(
+            attributes.vertices[vData3.vertex_index * 3],
+            attributes.vertices[vData3.vertex_index * 3 + 1],
+            attributes.vertices[vData3.vertex_index * 3 + 2]
+        );
+
+        glm::vec2 uv1 = glm::vec2(
+            attributes.texcoords[(vData1.texcoord_index * 2)],
+            attributes.texcoords[(vData1.texcoord_index * 2) + 1]
+            );
+
+        glm::vec2 uv2 = glm::vec2(
+            attributes.texcoords[(vData2.texcoord_index * 2)],
+            attributes.texcoords[(vData2.texcoord_index * 2) + 1]
+        );
+        glm::vec2 uv3 = glm::vec2(
+            attributes.texcoords[(vData3.texcoord_index * 2)],
+            attributes.texcoords[(vData3.texcoord_index * 2) + 1]
+        );
+        glm::vec3 deltaPos1 = v2 - v1;
+        glm::vec3 deltaPos2 = v3 - v1;
+
+        glm::vec2 deltaUV1 = uv2 - uv1;
+        glm::vec2 deltaUV2 = uv3 - uv1;
+
+        float r = 1.0f / ((deltaUV1.x * deltaUV2.y) - (deltaUV1.y * deltaUV2.x));
+        glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+        glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV1.x) * r;
+
+        tangents.push_back(tangent);
+        tangents.push_back(tangent);
+        tangents.push_back(tangent);
+
+        bitangents.push_back(tangent);
+        bitangents.push_back(tangent);
+        bitangents.push_back(tangent);
+    }
+
+
     //Initialize the array of vertex data
     std::vector<GLfloat> fullVertexData;
     //loop through all the vertex indices
@@ -422,6 +518,25 @@ int main(void)
         fullVertexData.push_back(
             //add the base offset by 1 to get V
             attributes.texcoords[(vData.texcoord_index * 2) + 1]
+        );
+
+        fullVertexData.push_back(
+            tangents[i].x
+        );
+        fullVertexData.push_back(
+            tangents[i].y
+        );
+        fullVertexData.push_back(
+            tangents[i].z
+        );
+        fullVertexData.push_back(
+            bitangents[i].x
+        );
+        fullVertexData.push_back(
+            bitangents[i].y
+        );
+        fullVertexData.push_back(
+            bitangents[i].z
         );
     }
 
@@ -494,6 +609,7 @@ int main(void)
     unsigned int skyboxTex;
 
     glGenTextures(1, &skyboxTex);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTex);
 
     //avoid pixelations worst case is blur
@@ -545,6 +661,11 @@ int main(void)
 
     GLuint indices[]{
         0, 1, 2
+    };
+
+    
+    class model3D {
+
     };
 
     //changes the size of screen from 1 to x, x being any number
@@ -619,7 +740,7 @@ int main(void)
         3, //how many indices - 3 for x y z
         GL_FLOAT, //wat array it is
         GL_FALSE,
-        8 * sizeof(GL_FLOAT),
+        14 * sizeof(GLfloat),
         (void*)0 //will be explain in the future
     );
 
@@ -644,7 +765,7 @@ int main(void)
         3,
         GL_FLOAT,
         GL_FALSE,
-        8 * sizeof(GL_FLOAT),
+        14 * sizeof(GLfloat),
         (void*)normPointer
     );
 
@@ -660,9 +781,34 @@ int main(void)
         GL_FLOAT, //data type of array
         GL_FALSE,
         //our vertex data has 5 floats in it (X,y,z,u,v)
-        8 * sizeof(GL_FLOAT),
+        14 * sizeof(GLfloat),
         //add in the offset here
         (void*)uvPtr
+    );
+
+    GLintptr tangentPtr = 8 * sizeof(float);
+    GLintptr bitangentPtr = 11 * sizeof(float);
+
+    glVertexAttribPointer(
+        3, //index 2 is tex coordinates / uv
+        3, //uv is 2 floats u and v
+        GL_FLOAT, //data type of array
+        GL_FALSE,
+        //our vertex data has 5 floats in it (X,y,z,u,v)
+        14 * sizeof(GLfloat),
+        //add in the offset here
+        (void*)tangentPtr
+    );
+
+    glVertexAttribPointer(
+        4, //index 2 is tex coordinates / uv
+        3, //uv is 2 floats u and v
+        GL_FLOAT, //data type of array
+        GL_FALSE,
+        //our vertex data has 5 floats in it (X,y,z,u,v)
+        14 * sizeof(GLfloat),
+        //add in the offset here
+        (void*)bitangentPtr
     );
 
     //glBufferData(
@@ -701,6 +847,9 @@ int main(void)
     //Enable 2 for out UV/tex coords
     glEnableVertexAttribArray(2);
 
+    glEnableVertexAttribArray(4);
+    glEnableVertexAttribArray(3);
+
     //this tells opengl we're done with VBO & VAO and now EBO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -729,7 +878,7 @@ int main(void)
         //Spec phong
         float specPhong = 16;
 
-        glm::vec3 cameraPos = glm::vec3(-80.f, 0, 30.f);
+        glm::vec3 cameraPos = glm::vec3(0.f, 0.f, 8.f);
         glm::mat4 cameraPosMatrix = glm::translate(
             glm::mat4(1.0f),
             cameraPos * -1.0f
@@ -789,7 +938,7 @@ int main(void)
         glUniformMatrix4fv(skyViewLoc, 1, GL_FALSE, glm::value_ptr(sky_view));
 
         glBindVertexArray(skyboxVAO);
-        glActiveTexture(0);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTex);
 
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
@@ -801,7 +950,7 @@ int main(void)
 
         //x_mod += 0.001f;
 
-        theta_y += 0.05f;
+        theta_x -= 0.01f;
 
         /*unsigned int xLoc = glGetUniformLocation(shaderProgram, "x");
         glUniform1f(xLoc, x_mod);
@@ -889,9 +1038,19 @@ int main(void)
         GLuint specPhongAddress = glGetUniformLocation(shaderProgram, "specPhong");
         glUniform1f(specPhongAddress, specPhong);
 
+        glActiveTexture(GL_TEXTURE0);
+        GLuint tex0Loc = glGetUniformLocation(shaderProgram, "tex0");
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glUniform1i(tex0Loc, 0);
+
+        glActiveTexture(GL_TEXTURE1);
+        GLuint tex1Loc = glGetUniformLocation(shaderProgram, "norm_tex");
+        glBindTexture(GL_TEXTURE_2D, norm_tex);
+        glUniform1i(tex1Loc, 1);
+
         //since our vertex data has 5 float in it
         //we divide the array size by 5 to get the number of vertices
-        glDrawArrays(GL_TRIANGLES, 0, fullVertexData.size() / 8);
+        glDrawArrays(GL_TRIANGLES, 0, fullVertexData.size() / 14);
 
         //no longer for the above line code
         //glDrawElements(
